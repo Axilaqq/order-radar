@@ -1,0 +1,24 @@
+&lt;?xml version="1.0"?&gt;
+<rss version="2.0"><channel>
+<item>
+  <title><![CDATA[Доработка 1С:УНФ — выгрузка остатков в Ozon]]></title>
+  <link>https://www.fl.ru/projects/111111/</link>
+  <guid>https://www.fl.ru/projects/111111/</guid>
+  <description><![CDATA[<p>Нужен парсер прайсов поставщиков и интеграция с 1С. Бюджет 45 000 руб.</p>]]></description>
+  <pubDate>Mon, 31 Aug 2026 08:15:00 +0000</pubDate>
+</item>
+<item>
+  <title>Написать курсовую работу по программированию</title>
+  <link>https://www.fl.ru/projects/222222/</link>
+  <guid>https://www.fl.ru/projects/222222/</guid>
+  <description>Срочно, 30 страниц</description>
+  <pubDate>Mon, 31 Aug 2026 08:20:00 +0000</pubDate>
+</item>
+<item>
+  <title>Покрасить забор</title>
+  <link>https://www.fl.ru/projects/333333/</link>
+  <guid>https://www.fl.ru/projects/333333/</guid>
+  <description>Дача, 40 метров</description>
+  <pubDate>Mon, 31 Aug 2026 08:25:00 +0000</pubDate>
+</item>
+</channel></rss>
