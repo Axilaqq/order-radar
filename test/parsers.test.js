@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import { parseRss, extractBudget } from '../src/sources/rss.js';
 import { parseFreelancehunt } from '../src/sources/freelancehunt.js';
 import { parseTelegram } from '../src/sources/telegram.js';
+import { parseInfostart } from '../src/sources/infostart.js';
 import { score } from '../src/filter.js';
 
 const read = (f) => readFileSync(new URL(`./fixtures/${f}`, import.meta.url), 'utf8');
@@ -52,4 +53,28 @@ test('Фильтр: профильный заказ проходит, курсо
 test('Фильтр: дедупликация тегов', () => {
   const r = score({ title: '1С 1С 1С', description: '1С:Предприятие' });
   assert.deepEqual(r.tags, ['1С']);
+});
+
+test('Инфостарт: разбирает REST-ответ биржи 1С', () => {
+  const items = parseInfostart(JSON.parse(read('infostart.json')), { id: 'infostart' });
+  assert.equal(items.length, 3);
+  assert.equal(items[0].external_id, '2777230');
+  assert.equal(items[0].url, 'https://infostart.ru/project/#/orders/2777230');
+  assert.equal(items[0].budget, '5000 ₽');
+  assert.match(items[0].description, /Конфигурации: 1С:Управление нашей фирмой 3\.0/);
+  assert.match(items[0].description, /Откликов: 7/);
+  assert.equal(items[0].published_at, '2026-08-31T13:36:54.000Z');
+});
+
+test('Инфостарт: бюджет 0 отдаётся как null, а не как ноль рублей', () => {
+  const items = parseInfostart(JSON.parse(read('infostart.json')), { id: 'infostart' });
+  assert.equal(items[1].budget, null);
+});
+
+test('Инфостарт: профильный заказ проходит фильтр, курсовая отсекается', () => {
+  const items = parseInfostart(JSON.parse(read('infostart.json')), { id: 'infostart' });
+  const [rec, excel, course] = items.map(score);
+  assert.equal(rec.passed, true, 'заказ по УНФ должен проходить');
+  assert.equal(excel.passed, true, 'выгрузка прайса из Excel в УТ должна проходить');
+  assert.equal(course.reason, 'stop-word');
 });
