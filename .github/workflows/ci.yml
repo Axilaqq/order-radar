@@ -1,0 +1,26 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Tests
+        run: node --test "test/*.test.js"
+
+      - name: Secret scan
+        run: |
+          if grep -rInE '(eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}|sb_secret_[A-Za-z0-9_-]{10,}|[0-9]{8,10}:AA[A-Za-z0-9_-]{30,})' \
+             --exclude-dir=node_modules --exclude-dir=.git --exclude='*.example' . ; then
+            echo "::error::Possible secret committed"
+            exit 1
+          fi
+          echo "No secrets found"
