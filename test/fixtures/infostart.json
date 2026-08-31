@@ -1,0 +1,5 @@
+{"data":[
+ {"id":2777230,"number_responses":7,"number_views":54,"title":"Разработать документ Рекламация","description":"По техническому заданию разработать документ \"Рекламация\". ","configurations":[{"id":71711,"title":"1С:Управление нашей фирмой 3.0","code":"УНФ3.0"}],"budget":5000,"status":{"data":{"code":"Y","title":"Активный"}},"published_at":"2026-08-31T16:36:54+0300"},
+ {"id":2776983,"number_responses":7,"title":"Выгрузка из таблицы Exel в Документ 1С: Отчет комиссионера","description":"Нужна обработка загрузки прайс-листа из Excel в 1С УТ 11.","configurations":[{"id":1,"title":"1С:Управление торговлей 11 "}],"budget":0,"published_at":"2026-08-31T10:12:00+0300"},
+ {"id":2776946,"number_responses":0,"title":"Написать курсовую по 1С","description":"Срочно нужна курсовая работа.","configurations":[],"budget":3000,"published_at":"2026-08-30T09:00:00+0300"}
+],"meta":{"total":90,"per_page":50,"current_page":1,"last_page":2}}
