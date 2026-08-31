@@ -22,6 +22,7 @@ export async function sendMessage(env, text, extra = {}) {
 }
 
 const SOURCE_LABELS = {
+  infostart: 'Инфостарт (1С)',
   freelancehunt: 'Freelancehunt',
   freelancer_com: 'Freelancer.com',
   fl_ru: 'FL.ru',
