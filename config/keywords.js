@@ -1,18 +1,22 @@
 // Ключевые слова, по которым бот решает, интересен ли заказ.
 // w — вес. Итоговый балл заказа = сумма весов сработавших правил.
 // tag — короткая метка, попадает в уведомление, чтобы было видно, почему заказ прошёл.
+// id — нужен, чтобы конкретный источник мог выключить правило через ignoreRules
+//      в config/sources.js. Например, на бирже по 1С правило «1С» не различает
+//      заказы: оно срабатывает у всех и в одиночку пробивает порог.
 export const KEYWORDS = [
-  { re: /(^|[^a-zа-я])1с([^a-zа-я]|$)|1c[\s-]?предприят|унф|управление торговлей|бухгалтери/i, w: 5, tag: '1С' },
-  { re: /битрикс\s?24|bitrix\s?24/i, w: 4, tag: 'Битрикс24' },
-  { re: /телеграм[\s-]?бот|telegram[\s-]?bot|тг[\s-]?бот|бот для telegram|бота? в телеграм/i, w: 4, tag: 'TG-бот' },
-  { re: /парсер|парсинг|scraping|scraper|краулер|crawler/i, w: 4, tag: 'парсинг' },
-  { re: /автоматизаци|automation|интеграци|integration|\bapi\b|вебхук|webhook/i, w: 3, tag: 'автоматизация' },
-  { re: /\bai\b|\bgpt\b|\bllm\b|нейросет|искусственн\w+ интеллект|chatgpt|openai|claude|n8n|make\.com/i, w: 3, tag: 'AI' },
-  { re: /ozon|wildberries|вайлдберриз|озон|яндекс[\s-]?маркет|маркетплейс/i, w: 3, tag: 'маркетплейсы' },
-  { re: /amocrm|амосрм|\bcrm\b|срм[\s-]?систем/i, w: 2, tag: 'CRM' },
-  { re: /excel|xlsx|google\s?sheets|гугл[\s-]?таблиц|\bcsv\b|прайс[\s-]?лист/i, w: 2, tag: 'таблицы' },
-  { re: /supabase|postgres|cloudflare|vercel|serverless/i, w: 2, tag: 'наш стек' },
-  { re: /python|node\.?js|javascript|typescript/i, w: 1, tag: 'язык' },
+  { id: '1c', re: /(^|[^a-zа-я])1с([^a-zа-я]|$)|1c[\s-]?предприят|унф|управление торговлей|бухгалтери/i, w: 5, tag: '1С' },
+  { id: 'bitrix', re: /битрикс\s?24|bitrix\s?24/i, w: 4, tag: 'Битрикс24' },
+  { id: 'tgbot', re: /телеграм[\s-]?бот|telegram[\s-]?bot|тг[\s-]?бот|бот для telegram|бота? в телеграм/i, w: 4, tag: 'TG-бот' },
+  { id: 'parsing', re: /парсер|парсинг|scraping|scraper|краулер|crawler/i, w: 4, tag: 'парсинг' },
+  { id: 'automation', re: /автоматизаци|automation|интеграци|integration|\bapi\b|вебхук|webhook|синхронизаци|обмен данными/i, w: 3, tag: 'автоматизация' },
+  { id: 'ai', re: /\bai\b|\bgpt\b|\bllm\b|нейросет|искусственн\w+ интеллект|chatgpt|openai|claude|n8n|make\.com/i, w: 3, tag: 'AI' },
+  { id: 'marketplace', re: /ozon|wildberries|вайлдберриз|озон|яндекс[\s-]?маркет|маркетплейс/i, w: 3, tag: 'маркетплейсы' },
+  { id: 'transfer', re: /выгрузк|загрузк|перенос данных|обмен между|сверк/i, w: 2, tag: 'обмен данных' },
+  { id: 'crm', re: /amocrm|амосрм|\bcrm\b|срм[\s-]?систем/i, w: 2, tag: 'CRM' },
+  { id: 'sheets', re: /excel|xlsx|google\s?sheets|гугл[\s-]?таблиц|\bcsv\b|прайс[\s-]?лист/i, w: 2, tag: 'таблицы' },
+  { id: 'stack', re: /supabase|postgres|cloudflare|vercel|serverless/i, w: 2, tag: 'наш стек' },
+  { id: 'lang', re: /python|node\.?js|javascript|typescript/i, w: 1, tag: 'язык' },
 ];
 
 // Если сработало любое стоп-правило — заказ отбрасывается независимо от баллов.
