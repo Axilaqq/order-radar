@@ -10,21 +10,45 @@ import { notify } from './telegram.js';
 const UA = 'order-radar/1.0';
 // Источники, отвечающие JSON. Остальные разбираются как текст (RSS, HTML).
 const JSON_SOURCES = new Set(['freelancehunt', 'infostart']);
-const FETCH_TIMEOUT_MS = 12000;
+// 12 секунд не хватило Инфостарту на первом боевом прогоне (01.09.2026):
+// «The operation was aborted», ноль заказов. Запас увеличен — cron не торопится.
+const FETCH_TIMEOUT_MS = 25000;
+const FETCH_ATTEMPTS = 2;
 
-async function fetchSource(source) {
+async function fetchOnce(source, timeoutMs) {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
     const res = await fetch(source.url, {
       signal: controller.signal,
-      headers: { 'User-Agent': UA, Accept: JSON_SOURCES.has(source.kind) ? 'application/json' : '*/*' },
+      headers: {
+        'User-Agent': UA,
+        Accept: JSON_SOURCES.has(source.kind) ? 'application/json' : '*/*',
+        // Источник может требовать своих заголовков — например браузерный
+        // User-Agent там, где обычный отбивается или отвечает медленно.
+        ...(source.headers || {}),
+      },
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return JSON_SOURCES.has(source.kind) ? await res.json() : await res.text();
   } finally {
     clearTimeout(timer);
   }
+}
+
+async function fetchSource(source) {
+  let lastError;
+  for (let attempt = 1; attempt <= FETCH_ATTEMPTS; attempt += 1) {
+    try {
+      return await fetchOnce(source, FETCH_TIMEOUT_MS);
+    } catch (err) {
+      lastError = err;
+      // Сервер ответил, но не 2xx — повтор ничего не изменит.
+      if (/^HTTP \d/.test(err.message)) break;
+      if (attempt < FETCH_ATTEMPTS) await new Promise((r) => setTimeout(r, 1000));
+    }
+  }
+  throw lastError;
 }
 
 function parse(payload, source) {
@@ -92,8 +116,7 @@ export async function run(env, { dryRun = false } = {}) {
       notified: report.notified,
       errors: report.errors.length ? report.errors.join(' | ') : null,
     }).catch((e) => {
-      // Не роняем прогон из-за журнала, но и не прячем: таблица runs пустая —
-      // значит сюда попадали, и причину видно в `wrangler tail`.
+      // Прогон из-за журнала не роняем, но и не прячем ошибку.
       console.error('logRun failed', e.message);
       report.log_error = e.message;
     });
