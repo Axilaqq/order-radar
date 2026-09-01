@@ -17,11 +17,14 @@ export function parseInfostart(payload, source) {
       external_id: String(o.id),
       title: String(o.title || '').trim(),
       url: o.id ? `https://infostart.ru/project/#/orders/${o.id}` : null,
-      description: truncate([
-        description,
+      description: truncate(description, DESCRIPTION_LIMIT),
+      // Служебные строки. В ОЦЕНКУ НЕ ВХОДЯТ — сборщик приклеит их к описанию
+      // уже после скоринга. Иначе названия конфигураций («1С:Управление
+      // торговлей 11») давали балл за правило «1С» каждому заказу подряд.
+      extra: [
         configs.length ? `Конфигурации: ${configs.join(', ')}` : '',
         `Откликов: ${responses}`,
-      ].filter(Boolean).join('\n'), DESCRIPTION_LIMIT),
+      ].filter(Boolean).join('\n'),
       // Бюджет часто не указан — тогда null, и в уведомлении будет «не указан».
       budget: budgetNum > 0 ? `${budgetNum} ₽` : null,
       published_at: toIso(o.published_at),
