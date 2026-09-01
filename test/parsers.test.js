@@ -43,7 +43,7 @@ test('Telegram: разбирает превью канала', () => {
 
 test('Фильтр: профильный заказ проходит, курсовая и посторонний — нет', () => {
   const items = parseRss(read('rss.xml'), { id: 'fl_ru' });
-  const [target, coursework, fence] = items.map(score);
+  const [target, coursework, fence] = items.map((o) => score(o));
   assert.equal(target.passed, true);
   assert.ok(target.score >= 8, `ожидали >=8, получили ${target.score}`);
   assert.deepEqual(coursework.reason, 'stop-word');
@@ -61,8 +61,10 @@ test('Инфостарт: разбирает REST-ответ биржи 1С', ()
   assert.equal(items[0].external_id, '2777230');
   assert.equal(items[0].url, 'https://infostart.ru/project/#/orders/2777230');
   assert.equal(items[0].budget, '5000 ₽');
-  assert.match(items[0].description, /Конфигурации: 1С:Управление нашей фирмой 3\.0/);
-  assert.match(items[0].description, /Откликов: 7/);
+  // Служебные строки лежат отдельно и в оценку не попадают.
+  assert.ok(!items[0].description.includes('Конфигурации'), 'конфигурации не должны быть в описании');
+  assert.match(items[0].extra, /Конфигурации: 1С:Управление нашей фирмой 3\.0/);
+  assert.match(items[0].extra, /Откликов: 7/);
   assert.equal(items[0].published_at, '2026-08-31T13:36:54.000Z');
 });
 
@@ -71,10 +73,26 @@ test('Инфостарт: бюджет 0 отдаётся как null, а не �
   assert.equal(items[1].budget, null);
 });
 
-test('Инфостарт: профильный заказ проходит фильтр, курсовая отсекается', () => {
-  const items = parseInfostart(JSON.parse(read('infostart.json')), { id: 'infostart' });
-  const [rec, excel, course] = items.map(score);
-  assert.equal(rec.passed, true, 'заказ по УНФ должен проходить');
-  assert.equal(excel.passed, true, 'выгрузка прайса из Excel в УТ должна проходить');
+test('Инфостарт: правило «1С» выключено, проходит только то, что реально различает', () => {
+  const src = { id: 'infostart', ignoreRules: ['1c'] };
+  const items = parseInfostart(JSON.parse(read('infostart.json')), src);
+  const [rec, excel, course] = items.map((o) => score(o, src));
+
+  // «Разработать документ Рекламация» — про 1С, но ничего из нашего профиля.
+  // Раньше проходил с баллом 5 просто за слово «1С». Теперь нет.
+  assert.equal(rec.passed, false, 'заказ без признаков профиля не должен проходить');
+
+  // Выгрузка прайса из Excel в УТ — профильная работа, проходит.
+  assert.equal(excel.passed, true, 'выгрузка прайса из Excel должна проходить');
+  assert.ok(excel.tags.includes('таблицы'));
+
   assert.equal(course.reason, 'stop-word');
+});
+
+test('Фильтр: ignoreRules выключает конкретное правило, остальные работают', () => {
+  const order = { title: 'Доработка 1С и выгрузка в Ozon', description: '' };
+  const withAll = score(order);
+  const without1c = score(order, { ignoreRules: ['1c'] });
+  assert.ok(withAll.score > without1c.score, 'без правила 1С балл должен быть ниже');
+  assert.ok(without1c.tags.includes('маркетплейсы'), 'остальные правила продолжают работать');
 });
