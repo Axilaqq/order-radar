@@ -49,8 +49,18 @@ export async function run(env, { dryRun = false } = {}) {
       entry.fetched = parsed.length;
 
       const rows = parsed.map((order) => {
-        const s = score(order);
-        return { ...order, score: s.score, tags: s.tags, status: s.passed ? 'new' : 'skipped', raw: null };
+        // Порядок важен: сначала оценка по чистому тексту заказа,
+        // и только потом к описанию приклеиваются служебные строки (extra).
+        const s = score(order, source);
+        const { extra, ...rest } = order;
+        return {
+          ...rest,
+          description: [rest.description, extra].filter(Boolean).join('\n') || null,
+          score: s.score,
+          tags: s.tags,
+          status: s.passed ? 'new' : 'skipped',
+          raw: null,
+        };
       });
 
       const inserted = dryRun ? [] : await store.insertNew(rows);
@@ -81,7 +91,12 @@ export async function run(env, { dryRun = false } = {}) {
       new_orders: report.new_orders,
       notified: report.notified,
       errors: report.errors.length ? report.errors.join(' | ') : null,
-    }).catch((e) => console.error('logRun failed', e.message));
+    }).catch((e) => {
+      // Не роняем прогон из-за журнала, но и не прячем: таблица runs пустая —
+      // значит сюда попадали, и причину видно в `wrangler tail`.
+      console.error('logRun failed', e.message);
+      report.log_error = e.message;
+    });
   }
   return report;
 }
