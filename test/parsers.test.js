@@ -6,6 +6,7 @@ import { parseFreelancehunt } from '../src/sources/freelancehunt.js';
 import { parseTelegram } from '../src/sources/telegram.js';
 import { parseInfostart } from '../src/sources/infostart.js';
 import { score } from '../src/filter.js';
+import { looksUkrainian } from '../src/language.js';
 
 const read = (f) => readFileSync(new URL(`./fixtures/${f}`, import.meta.url), 'utf8');
 
@@ -95,4 +96,30 @@ test('Фильтр: ignoreRules выключает конкретное прав
   const without1c = score(order, { ignoreRules: ['1c'] });
   assert.ok(withAll.score > without1c.score, 'без правила 1С балл должен быть ниже');
   assert.ok(without1c.tags.includes('маркетплейсы'), 'остальные правила продолжают работать');
+});
+
+test('Язык: украинские объявления распознаются, русские и английские — нет', () => {
+  // Здесь нет ни і, ні ї — ловится по корню «розроб».
+  assert.equal(looksUkrainian('Розробка дизайну етикетки для шкарпеток'), true);
+  assert.equal(looksUkrainian('Потрібен фармацевт-консультант для перевірки текстів'), true);
+  // Заголовок без характерных букв ловится вместе с описанием — так фильтр и работает.
+  assert.equal(looksUkrainian('BLENDER модулюваня\nПотрібно зробити модель'), true);
+
+  assert.equal(looksUkrainian('Настройка аудио в Remote Desktop на Windows Server'), false);
+  assert.equal(looksUkrainian('Доработка 1С:УНФ — выгрузка остатков в Ozon'), false);
+  assert.equal(looksUkrainian('Freelance Translators Needed'), false);
+  assert.equal(looksUkrainian(''), false);
+});
+
+test('Язык: одна украинская буква в русском тексте не отбрасывает заказ', () => {
+  const ru = 'Нужна интеграция 1С с маркетплейсом, склад в городе Київ, выгрузка цен';
+  assert.equal(looksUkrainian(ru), false, 'перевес русских букв должен победить');
+  assert.equal(score({ title: ru, description: '' }).passed, true);
+});
+
+test('Фильтр: украинский заказ не проходит с причиной ukrainian', () => {
+  const r = score({ title: 'Інтеграція 1С з маркетплейсом', description: 'Потрібна вигрузка цін' });
+  assert.equal(r.passed, false);
+  assert.equal(r.reason, 'ukrainian');
+  assert.equal(r.score, 0);
 });
