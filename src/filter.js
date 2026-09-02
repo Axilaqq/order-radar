@@ -1,4 +1,5 @@
-import { KEYWORDS, STOP_WORDS, MIN_SCORE } from '../config/keywords.js';
+import { KEYWORDS, STOP_WORDS, MIN_SCORE, SKIP_UKRAINIAN } from '../config/keywords.js';
+import { looksUkrainian } from './language.js';
 
 // Считает балл заказа и объясняет, почему он прошёл или не прошёл.
 //
@@ -11,6 +12,12 @@ export function score(order, source = {}) {
   // и фильтр перестаёт фильтровать.
   const haystack = `${order.title || ''}\n${order.description || ''}`;
   const ignored = new Set(source.ignoreRules || []);
+
+  // Язык проверяем первым: разбирать по ключевым словам объявление, с которым
+  // всё равно не будем работать, смысла нет.
+  if (SKIP_UKRAINIAN && looksUkrainian(haystack)) {
+    return { score: 0, tags: [], passed: false, reason: 'ukrainian' };
+  }
 
   for (const stop of STOP_WORDS) {
     if (stop.test(haystack)) {
