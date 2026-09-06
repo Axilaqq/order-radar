@@ -1,6 +1,6 @@
 // Список площадок, которые опрашивает бот.
-// kind — адаптер: 'workspace' | 'infostart' | 'remoteok' | 'jobicy' | 'arbeitnow' |
-//        'freelancehunt' | 'rss' | 'telegram'.
+// kind — адаптер: 'workspace' | 'weblancer' | 'infostart' | 'remoteok' | 'jobicy' |
+//        'arbeitnow' | 'freelancehunt' | 'rss' | 'telegram'.
 // region — для кого площадка: 'ru' | 'west'. Влияет только на читаемость конфига.
 // enabled — включён ли источник.
 // ignoreRules — id правил из config/keywords.js, которые здесь ничего не различают.
@@ -29,6 +29,23 @@ export const SOURCES = [
       'Accept-Language': 'ru-RU,ru;q=0.9',
     },
     status: 'ПРОВЕРЕНО 06.09.2026: машинного доступа нет (RSS 404/403, sitemap без lastmod), поэтому разбираем HTML списка. На /tenders/ 10 свежих тендеров, бюджеты до 100 000 – от 1 200 000 ₽, поток ~2–3 в сутки по всем направлениям. Адаптер проверен на реальной сохранённой странице этого же адреса: 10 карточек из 10, бюджеты и даты верные. НЕ ПРОВЕРЕНО: пользовательское соглашение площадки насчёт автоматического сбора.',
+  },
+  {
+    id: 'weblancer',
+    kind: 'weblancer',
+    region: 'ru',
+    // Адрес /jobs/ перенаправляет сюда же. robots.txt закрывает /api/,
+    // /account/, /ajax/, /socket* и любые адреса с параметрами (*page=,
+    // *filter=, *action= и прочие). Чистая /freelance/ не запрещена —
+    // ходим только на неё, query-строку не подставляем.
+    url: 'https://www.weblancer.net/freelance/',
+    label: 'Weblancer, заказы',
+    enabled: true,
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+      'Accept-Language': 'ru-RU,ru;q=0.9',
+    },
+    status: 'ПРОВЕРЕНО 06.09.2026 в браузере: 20 карточек на странице, адаптер разобрал 20 из 20 — у всех дата, описание и число заявок, у 7 из 20 бюджет. Поток 20 заказов за двое суток, профильных 4 (Телеграм-боты, парсинг, локальные LLM), заявок на заказ 1–7. Бюджеты в долларах. Машинного доступа нет: /rss/projects/ отдаёт 404, фида в robots.txt нет. НЕ ПРОВЕРЕНО: ответит ли площадка воркеру — при заходе из браузера отдаётся проверка Cloudflare, она может отбить запрос не из браузера, как это делает FL.ru.',
   },
   {
     id: 'infostart',
