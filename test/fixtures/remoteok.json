@@ -1,0 +1,5 @@
+[
+ {"legal":"See https://remoteok.com/api for terms. This first element is not a job."},
+ {"slug":"remote-automation-engineer-acme-1137307","id":"1137307","position":"Automation Engineer (Zapier / n8n)","company":"Acme","date":"2026-09-04T15:13:46+00:00","url":"https://remoteok.com/remote-jobs/remote-automation-engineer-acme-1137307","salary_min":60000,"salary_max":90000,"tags":["automation","integration","api"],"description":"Build internal automation and third-party API integrations."},
+ {"slug":"remote-junior-crypto-analyst-empire-1137308","id":"1137308","position":"Junior Crypto Analyst & Trader","company":"Empire Assets","date":"2026-09-04T10:00:00+00:00","url":"https://remoteok.com/remote-jobs/remote-junior-crypto-analyst-empire-1137308","salary_min":60000,"salary_max":80000,"tags":["crypto","trading"],"description":"Analyse markets and place trades."}
+]
