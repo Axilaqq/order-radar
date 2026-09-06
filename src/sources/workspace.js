@@ -32,8 +32,11 @@ export function parseRuDate(text = '') {
 }
 
 // Площадка ставит неразрывные пробелы в бюджетах: «1 000 000 ₽».
-// Коды указаны явно — буквальный U+00A0 в исходнике незаметно теряется.
-const nbsp = (s = '') => s.replace(/[  ]|&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
+// Коды заданы через fromCharCode: буквальный неразрывный пробел в исходнике
+// не виден глазами и теряется при копировании, а escape-последовательность
+// может быть развёрнута инструментом, который кладёт файл в репозиторий.
+const NBSP_RE = new RegExp('[' + String.fromCharCode(0x00a0, 0x202f) + ']|&nbsp;', 'g');
+const nbsp = (s = '') => s.replace(NBSP_RE, ' ').replace(/\s+/g, ' ').trim();
 
 function infoItem(card, titleRe) {
   const items = card.match(/<div class="b-tender__info-item">[\s\S]*?<\/div>\s*<\/div>/g) || [];
