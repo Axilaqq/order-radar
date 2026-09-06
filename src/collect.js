@@ -3,13 +3,16 @@ import { parseRss } from './sources/rss.js';
 import { parseFreelancehunt } from './sources/freelancehunt.js';
 import { parseTelegram } from './sources/telegram.js';
 import { parseInfostart } from './sources/infostart.js';
+import { parseRemoteOk } from './sources/remoteok.js';
+import { parseJobicy } from './sources/jobicy.js';
+import { parseArbeitnow } from './sources/arbeitnow.js';
 import { score } from './filter.js';
 import { db } from './db.js';
 import { notify } from './telegram.js';
 
 const UA = 'order-radar/1.0';
 // Источники, отвечающие JSON. Остальные разбираются как текст (RSS, HTML).
-const JSON_SOURCES = new Set(['freelancehunt', 'infostart']);
+const JSON_SOURCES = new Set(['freelancehunt', 'infostart', 'remoteok', 'jobicy', 'arbeitnow']);
 // 12 секунд не хватило Инфостарту на первом боевом прогоне (01.09.2026):
 // «The operation was aborted», ноль заказов. Запас увеличен — cron не торопится.
 const FETCH_TIMEOUT_MS = 25000;
@@ -54,6 +57,9 @@ async function fetchSource(source) {
 function parse(payload, source) {
   if (source.kind === 'freelancehunt') return parseFreelancehunt(payload, source);
   if (source.kind === 'infostart') return parseInfostart(payload, source);
+  if (source.kind === 'remoteok') return parseRemoteOk(payload, source);
+  if (source.kind === 'jobicy') return parseJobicy(payload, source);
+  if (source.kind === 'arbeitnow') return parseArbeitnow(payload, source);
   if (source.kind === 'telegram') return parseTelegram(payload, source);
   return parseRss(payload, source);
 }
