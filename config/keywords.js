@@ -8,9 +8,12 @@ export const KEYWORDS = [
   { id: '1c', re: /(^|[^a-zа-я])1с([^a-zа-я]|$)|1c[\s-]?предприят|унф|управление торговлей|бухгалтери/i, w: 5, tag: '1С' },
   { id: 'bitrix', re: /битрикс\s?24|bitrix\s?24/i, w: 4, tag: 'Битрикс24' },
   { id: 'tgbot', re: /телеграм[\s-]?бот|telegram[\s-]?bot|тг[\s-]?бот|бот для telegram|бота? в телеграм/i, w: 4, tag: 'TG-бот' },
+  { id: 'chatbot', re: /чат[\s-]?бот|голосов\w+ бот|бот для сайта/i, w: 4, tag: 'чат-бот' },
   { id: 'parsing', re: /парсер|парсинг|scraping|scraper|краулер|crawler/i, w: 4, tag: 'парсинг' },
   { id: 'automation', re: /автоматизаци|automation|интеграци|integration|\bapi\b|вебхук|webhook|синхронизаци|обмен данными/i, w: 3, tag: 'автоматизация' },
-  { id: 'ai', re: /\bai\b|\bgpt\b|\bllm\b|нейросет|искусственн\w+ интеллект|chatgpt|openai|claude|n8n|make\.com/i, w: 3, tag: 'AI' },
+  // «ии» проверяется через границы из не-букв: \b в JS работает по латинице
+  // и на кириллице соврал бы, поймав «ии» внутри слова.
+  { id: 'ai', re: /\bai\b|\bgpt\b|\bllm\b|нейросет|искусственн\w+ интеллект|(^|[^а-яёa-z])ии([^а-яёa-z]|$)|chatgpt|openai|claude|n8n|make\.com/i, w: 3, tag: 'AI' },
   { id: 'marketplace', re: /ozon|wildberries|вайлдберриз|озон|яндекс[\s-]?маркет|маркетплейс/i, w: 3, tag: 'маркетплейсы' },
   { id: 'transfer', re: /выгрузк|загрузк|перенос данных|обмен между|сверк/i, w: 2, tag: 'обмен данных' },
   { id: 'crm', re: /amocrm|амосрм|\bcrm\b|срм[\s-]?систем/i, w: 2, tag: 'CRM' },
