@@ -7,6 +7,7 @@ import { parseRemoteOk } from './sources/remoteok.js';
 import { parseJobicy } from './sources/jobicy.js';
 import { parseArbeitnow } from './sources/arbeitnow.js';
 import { parseWorkspace } from './sources/workspace.js';
+import { parseWeblancer } from './sources/weblancer.js';
 import { score } from './filter.js';
 import { db } from './db.js';
 import { notify } from './telegram.js';
@@ -63,6 +64,7 @@ function parse(payload, source) {
   if (source.kind === 'jobicy') return parseJobicy(payload, source);
   if (source.kind === 'arbeitnow') return parseArbeitnow(payload, source);
   if (source.kind === 'workspace') return parseWorkspace(payload, source);
+  if (source.kind === 'weblancer') return parseWeblancer(payload, source);
   if (source.kind === 'telegram') return parseTelegram(payload, source);
   return parseRss(payload, source);
 }
