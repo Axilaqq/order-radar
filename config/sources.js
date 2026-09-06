@@ -14,7 +14,7 @@ export const SOURCES = [
     kind: 'workspace',
     region: 'ru',
     // Именно категория «CRM, 1С, ПО, чат-боты, администрирование», заданная
-    // ПУТ�ём, а не фильтром: robots.txt запрещает /tenders/? и /tenders/*/?,
+    // путём, а не фильтром: robots.txt запрещает /tenders/? и /tenders/*/?,
     // то есть любые параметры запроса. Путь /tenders/crm/ в запретах не значится.
     url: 'https://workspace.ru/tenders/crm/',
     label: 'Workspace, тендеры (CRM/1С/ПО)',
