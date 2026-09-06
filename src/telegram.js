@@ -22,6 +22,7 @@ export async function sendMessage(env, text, extra = {}) {
 }
 
 const SOURCE_LABELS = {
+  workspace: 'Workspace, тендер',
   infostart: 'Инфостарт (1С)',
   remoteok: 'RemoteOK 🌍',
   jobicy: 'Jobicy 🌍',
