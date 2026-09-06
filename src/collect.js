@@ -10,6 +10,7 @@ import { parseWorkspace } from './sources/workspace.js';
 import { score } from './filter.js';
 import { db } from './db.js';
 import { notify } from './telegram.js';
+import { translateAll } from './translate.js';
 
 const UA = 'order-radar/1.0';
 // Источники, отвечающие JSON. Остальные разбираются как текст (RSS, HTML).
@@ -103,7 +104,11 @@ export async function run(env, { dryRun = false } = {}) {
       report.new_orders += inserted.length;
 
       if (toSend.length && !paused) {
-        const sentIds = await notify(env, toSend);
+        // Иностранные объявления переводим на русский перед отправкой.
+        // Переводятся только те, что прошли фильтр, — это единицы за прогон.
+        const readable = await translateAll(env, toSend);
+        entry.translated = readable.filter((o) => o.translated).length;
+        const sentIds = await notify(env, readable);
         await store.markSent(sentIds);
         report.notified += sentIds.length;
       }
