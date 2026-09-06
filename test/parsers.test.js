@@ -8,6 +8,7 @@ import { parseInfostart } from '../src/sources/infostart.js';
 import { parseRemoteOk } from '../src/sources/remoteok.js';
 import { parseJobicy } from '../src/sources/jobicy.js';
 import { parseArbeitnow } from '../src/sources/arbeitnow.js';
+import { parseWorkspace, parseRuDate } from '../src/sources/workspace.js';
 import { score } from '../src/filter.js';
 import { looksUkrainian } from '../src/language.js';
 
@@ -47,7 +48,7 @@ test('Telegram: разбирает превью канала', () => {
 
 test('Фильтр: профильный заказ проходит, курсовая и посторонний — нет', () => {
   const items = parseRss(read('rss.xml'), { id: 'fl_ru' });
-  const [target, coursework, fence] = items.map((o) => score(o));
+  const [target, coursework, fence] = items.map(score);
   assert.equal(target.passed, true);
   assert.ok(target.score >= 8, `ожидали >=8, получили ${target.score}`);
   assert.deepEqual(coursework.reason, 'stop-word');
@@ -175,4 +176,36 @@ test('Порог источника переопределяет общий MIN_
   assert.equal(s.passed, true, 'при общем пороге 3 проходит');
   assert.equal(score(order, { minScore: s.score + 1 }).passed, false, 'при пороге выше балла — нет');
   assert.equal(score(order, { minScore: s.score }).passed, true, 'ровно на пороге — проходит');
+});
+
+test('Workspace: разбирает карточки тендеров с сохранённой страницы', () => {
+  const items = parseWorkspace(read('workspace.html'), { id: 'workspace' });
+  assert.equal(items.length, 2);
+  assert.equal(items[0].title, 'Приложение по предоставлению услуг по ремонту бытовой техники');
+  assert.equal(items[0].budget, '1 000 000 - 1 500 000 ₽', 'бюджет берётся из блока заголовка, а не из дат');
+  assert.equal(items[0].published_at, '2026-09-04T12:00:00.000Z');
+  assert.match(items[0].url, /^https:\/\/workspace\.ru\/tenders\//);
+  assert.match(items[0].description, /Приём заявок до: 18 сентября 2026/);
+  assert.match(items[0].description, /Просмотров: 885/);
+  // «от 1 200 000» — вторая форма записи бюджета.
+  assert.equal(items[1].budget, 'от 1 200 000 ₽');
+});
+
+test('Workspace: русская дата переводится в ISO, мусор даёт null', () => {
+  assert.equal(parseRuDate('04 сентября 2026'), '2026-09-04T12:00:00.000Z');
+  assert.equal(parseRuDate('1 января 2027'), '2027-01-01T12:00:00.000Z');
+  assert.equal(parseRuDate('позавчера'), null);
+  assert.equal(parseRuDate(''), null);
+});
+
+test('Workspace: сломанная вёрстка даёт пустой список, а не падение', () => {
+  assert.deepEqual(parseWorkspace('<div>совсем другая страница</div>', { id: 'workspace' }), []);
+  assert.deepEqual(parseWorkspace('', { id: 'workspace' }), []);
+});
+
+test('Фильтр: чат-боты и ИИ на русском теперь распознаются', () => {
+  assert.ok(score({ title: 'DevOps-инженер для поддержки инфраструктуры чат-бота на Python' }).tags.includes('чат-бот'));
+  assert.ok(score({ title: 'Внедрение ИИ решений в области автозаказа' }).tags.includes('AI'));
+  // «ии» внутри слова не должно срабатывать
+  assert.ok(!score({ title: 'Реставрация интерьера в помещении' }).tags.includes('AI'));
 });
