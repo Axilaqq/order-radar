@@ -31,7 +31,9 @@ export function parseRuDate(text = '') {
   return `${m[3]}-${month}-${String(m[1]).padStart(2, '0')}T12:00:00.000Z`;
 }
 
-const nbsp = (s = '') => s.replace(/ |&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
+// Площадка ставит неразрывные пробелы в бюджетах: «1 000 000 ₽».
+// Коды указаны явно — буквальный U+00A0 в исходнике незаметно теряется.
+const nbsp = (s = '') => s.replace(/[  ]|&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
 
 function infoItem(card, titleRe) {
   const items = card.match(/<div class="b-tender__info-item">[\s\S]*?<\/div>\s*<\/div>/g) || [];
