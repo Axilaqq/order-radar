@@ -17,6 +17,16 @@ export const KEYWORDS = [
   { id: 'sheets', re: /excel|xlsx|google\s?sheets|гугл[\s-]?таблиц|\bcsv\b|прайс[\s-]?лист/i, w: 2, tag: 'таблицы' },
   { id: 'stack', re: /supabase|postgres|cloudflare|vercel|serverless/i, w: 2, tag: 'наш стек' },
   { id: 'lang', re: /python|node\.?js|javascript|typescript/i, w: 1, tag: 'язык' },
+
+  // Английские правила — для западных площадок (RemoteOK, Jobicy, WWR, Arbeitnow).
+  // Русские правила там почти не срабатывают, а профиль тот же: автоматизация,
+  // интеграции, обмен данными, боты.
+  { id: 'en_automation', re: /\bautomation\b|\bautomate\b|\bworkflow\b|zapier|\bmake\.com\b|\bn8n\b|no[- ]?code|low[- ]?code|airtable/i, w: 4, tag: 'automation' },
+  { id: 'en_integration', re: /\bintegration\b|\bintegrat(e|ing)\b|\bwebhook\b|\brest api\b|third[- ]party api/i, w: 3, tag: 'integration' },
+  { id: 'en_data', re: /\betl\b|data pipeline|data migration|web scraping|\bscraper\b|\bcrawler\b/i, w: 4, tag: 'data' },
+  { id: 'en_bot', re: /telegram bot|chatbot|\bslack bot\b|discord bot/i, w: 4, tag: 'bot' },
+  { id: 'en_erp', re: /\berp\b|\bcrm\b|salesforce|hubspot|netsuite|odoo|sap\b/i, w: 2, tag: 'ERP/CRM' },
+  { id: 'en_contract', re: /\bcontract\b|\bfreelance\b|\bpart[- ]time\b|project[- ]based/i, w: 2, tag: 'контракт' },
 ];
 
 // Если сработало любое стоп-правило — заказ отбрасывается независимо от баллов.
@@ -29,10 +39,8 @@ export const STOP_WORDS = [
   /знакомств|эскорт|18\+/i,
 ];
 
-// Отбрасывать объявления на украинском языке (в основном Freelancehunt).
-// Работать с ними всё равно нельзя, а поток они засоряют: по замеру 01.09.2026
-// это 49 из 81 заказа площадки. Как это определяется — в src/language.js.
+// Отбрасывать объявления на украинском языке. Как это определяется — в src/language.js.
 export const SKIP_UKRAINIAN = true;
 
-// Минимальный балл, при котором заказ уходит в уведомление.
+// Минимальный балл по умолчанию. Источник может задать свой через minScore.
 export const MIN_SCORE = 3;
