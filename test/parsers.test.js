@@ -5,6 +5,9 @@ import { parseRss, extractBudget } from '../src/sources/rss.js';
 import { parseFreelancehunt } from '../src/sources/freelancehunt.js';
 import { parseTelegram } from '../src/sources/telegram.js';
 import { parseInfostart } from '../src/sources/infostart.js';
+import { parseRemoteOk } from '../src/sources/remoteok.js';
+import { parseJobicy } from '../src/sources/jobicy.js';
+import { parseArbeitnow } from '../src/sources/arbeitnow.js';
 import { score } from '../src/filter.js';
 import { looksUkrainian } from '../src/language.js';
 
@@ -122,4 +125,54 @@ test('Фильтр: украинский заказ не проходит с п�
   assert.equal(r.passed, false);
   assert.equal(r.reason, 'ukrainian');
   assert.equal(r.score, 0);
+});
+
+test('RemoteOK: пропускает юридическую заметку и разбирает вакансии', () => {
+  const items = parseRemoteOk(JSON.parse(read('remoteok.json')), { id: 'remoteok' });
+  assert.equal(items.length, 2, 'нулевой элемент-заметка не должен попасть в заказы');
+  assert.equal(items[0].external_id, '1137307');
+  assert.equal(items[0].title, 'Acme — Automation Engineer (Zapier / n8n)');
+  assert.equal(items[0].budget, '60000–90000 USD/год');
+  assert.equal(items[0].published_at, '2026-09-04T15:13:46.000Z');
+});
+
+test('RemoteOK: английский фильтр пропускает автоматизацию и режет крипто-аналитика', () => {
+  const src = { id: 'remoteok', minScore: 5 };
+  const [automation, crypto] = parseRemoteOk(JSON.parse(read('remoteok.json')), src).map((o) => score(o, src));
+  assert.equal(automation.passed, true);
+  assert.ok(automation.tags.includes('automation'));
+  assert.equal(crypto.passed, false, 'крипто-трейдер не наш профиль');
+});
+
+test('Jobicy: разбирает вакансии и зарплату', () => {
+  const src = { id: 'jobicy', minScore: 5 };
+  const items = parseJobicy(JSON.parse(read('jobicy.json')), src);
+  assert.equal(items.length, 2);
+  assert.equal(items[0].budget, '102500–140000 USD/год');
+  assert.match(items[0].description, /География: USA/);
+  const [integration, office] = items.map((o) => score(o, src));
+  assert.equal(integration.passed, true);
+  assert.equal(office.passed, false, 'офис-менеджер не должен проходить');
+  assert.equal(items[1].budget, null, 'нулевая зарплата — это null, а не 0');
+});
+
+test('Arbeitnow: unix-время переводится в дату, remote попадает в описание', () => {
+  const src = { id: 'arbeitnow', minScore: 5 };
+  const items = parseArbeitnow(JSON.parse(read('arbeitnow.json')), src);
+  assert.equal(items.length, 2);
+  assert.equal(items[0].published_at, new Date(1788695715 * 1000).toISOString());
+  assert.match(items[0].description, /Удалённо: да/);
+  assert.match(items[1].description, /Удалённо: нет/);
+  assert.equal(items[0].budget, null, 'фид не отдаёт зарплату');
+  const [dev, waiter] = items.map((o) => score(o, src));
+  assert.equal(dev.passed, true);
+  assert.equal(waiter.passed, false);
+});
+
+test('Порог источника переопределяет общий MIN_SCORE', () => {
+  const order = { title: 'CRM integration', description: '' };
+  const s = score(order);
+  assert.equal(s.passed, true, 'при общем пороге 3 проходит');
+  assert.equal(score(order, { minScore: s.score + 1 }).passed, false, 'при пороге выше балла — нет');
+  assert.equal(score(order, { minScore: s.score }).passed, true, 'ровно на пороге — проходит');
 });
