@@ -43,6 +43,11 @@ export function formatOrder(order) {
   ];
   lines.push(meta.join(' · '));
   if (order.tags?.length) lines.push(`🏷 ${order.tags.map(escapeHtml).join(', ')}`);
+  // Показываем, что текст переведён, и даём оригинал заголовка —
+  // машинный перевод может исказить название технологии.
+  if (order.title_original && order.title_original !== order.title) {
+    lines.push(`🌐 перевод · оригинал: ${escapeHtml(order.title_original)}`);
+  }
   if (order.description) lines.push('', escapeHtml(order.description.slice(0, 700)));
   if (order.url) lines.push('', order.url);
   return lines.join('\n');
