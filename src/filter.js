@@ -3,8 +3,9 @@ import { looksUkrainian } from './language.js';
 
 // Считает балл заказа и объясняет, почему он прошёл или не прошёл.
 //
-// Второй аргумент — источник из config/sources.js. Из него берётся ignoreRules:
-// список id правил, которые на этой площадке ничего не различают.
+// Второй аргумент — источник из config/sources.js. Из него берутся:
+//   ignoreRules — id правил, которые на этой площадке ничего не различают;
+//   minScore    — свой порог вместо общего MIN_SCORE.
 export function score(order, source = {}) {
   // Оцениваем ТОЛЬКО текст самого заказа. Служебные строки, которые адаптер
   // добавляет для читаемости (конфигурации, число откликов), сюда не попадают:
@@ -35,11 +36,15 @@ export function score(order, source = {}) {
     }
   }
 
+  // Порог можно поднять для конкретного источника: на западных досках
+  // объявлений поток на порядок больше и шума в нём соответственно тоже.
+  const threshold = Number.isFinite(source.minScore) ? source.minScore : MIN_SCORE;
+
   return {
     score: total,
     tags,
-    passed: total >= MIN_SCORE,
-    reason: total >= MIN_SCORE ? 'match' : 'low-score',
+    passed: total >= threshold,
+    reason: total >= threshold ? 'match' : 'low-score',
   };
 }
 
