@@ -5,6 +5,10 @@
   "compatibility_date": "2026-08-01",
   "compatibility_flags": ["nodejs_compat"],
   "observability": { "enabled": true },
+  // Перевод иностранных объявлений на русский. Модель @cf/meta/m2m100-1.2b
+  // вызывается как env.AI.run(...) — см. src/translate.js. Отдельный ключ
+  // не нужен, у Workers AI есть бесплатная дневная квота.
+  "ai": { "binding": "AI" },
   "triggers": {
     // Каждые 10 минут. Cloudflare считает cron в UTC.
     "crons": ["*/10 * * * *"]
