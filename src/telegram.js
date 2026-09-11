@@ -54,6 +54,37 @@ export function formatOrder(order) {
   return lines.join('\n');
 }
 
+// Уведомление о письме с площадки: заказчик написал или откликнулся.
+// Выглядит иначе, чем находка заказа, — это не «посмотри вакансию»,
+// а «тебе написали, надо ответить».
+const MAIL_KIND_TITLE = {
+  message: '✉️ Новое сообщение',
+  order: '📌 Движение по заказу',
+};
+
+export function formatMailEvent(event) {
+  const lines = [`<b>${MAIL_KIND_TITLE[event.kind] || '✉️ Уведомление'} · ${escapeHtml(event.platform)}</b>`];
+  if (event.author) lines.push(`От: ${escapeHtml(event.author)}`);
+  if (event.subject) lines.push(`<i>${escapeHtml(event.subject)}</i>`);
+  if (event.text) lines.push('', escapeHtml(event.text.slice(0, 700)));
+  if (event.url) lines.push('', `Ответить: ${event.url}`);
+  return lines.join('\n');
+}
+
+export async function notifyMail(env, events) {
+  const sent = [];
+  for (const event of events) {
+    try {
+      await sendMessage(env, formatMailEvent(event));
+      sent.push(event.id);
+    } catch (err) {
+      console.error('notifyMail failed', event.id, err.message);
+    }
+    await new Promise((r) => setTimeout(r, 120));
+  }
+  return sent;
+}
+
 export async function notify(env, orders) {
   const sent = [];
   for (const order of orders) {
