@@ -55,6 +55,35 @@ test('Почта: дайджесты и рассылки молчат — зак
   }
 });
 
+test('Почта: находки живого прогона 12.09.2026 — дайджест FL.ru и письмо Freelancer.com', () => {
+  // «Ваши заказы дня» до правки проходило как движение по заказу и уезжало
+  // в Telegram — правило «ваш заказ» срабатывало на дайджесте.
+  assert.equal(classifyMail({ subject: '📫 Ваши заказы дня', from: 'no_reply@free-lance.ru' }).notify, false);
+  assert.equal(classifyMail({ subject: '📫 Ваши заказы дня', from: 'no_reply@free-lance.ru' }).kind, 'digest');
+
+  // Рассылки Freelancer.com по теме не опознавались и молчали — верно,
+  // но пусть считаются дайджестом, а не «прочим».
+  for (const subject of [
+    'Ilya, these Software Architecture, Excel, and Python projects might interest you',
+    'New activity in Freelancer Onboarding',
+    '@quartermaster posted in General Announcements',
+  ]) {
+    const r = classifyMail({ subject, from: 'noreply@notifications.freelancer.com' });
+    assert.equal(r.notify, false, subject);
+    assert.equal(r.kind, 'digest', subject);
+  }
+
+  // А вот это — настоящее личное сообщение, которое пропускалось: тема
+  // «Re: Sofia» ни о чём, зато отправитель messages@ говорит сам за себя.
+  const sofia = classifyMail({ subject: 'Re: Sofia', from: 'Freelancer.com <messages@notifications.freelancer.com>' });
+  assert.equal(sofia.notify, true);
+  assert.equal(sofia.kind, 'message');
+  assert.equal(sofia.platform.label, 'Freelancer.com');
+
+  // Но адрес messages@ не должен перебивать правило про секреты.
+  assert.equal(classifyMail({ subject: 'Verification code', from: 'messages@notifications.freelancer.com' }).notify, false);
+});
+
 test('Почта: личные сообщения и движение по заказу пересылаются', () => {
   const wanted = [
     ['Новое сообщение на Kwork.ru', 'message'],
