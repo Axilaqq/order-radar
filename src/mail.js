@@ -45,10 +45,14 @@ const RULES = [
 
   // 2. Рассылки и дайджесты. Заказы у нас и так собираются напрямую
   //    с площадок, второй раз через почту они не нужны.
-  { kind: 'digest', notify: false, re: /нов[а-яё]* проект[а-яё]* на бирже|подходящ[а-яё]* проект|дайджест|подборк|рассылк|новост[а-яё]*|вакансии дня|как сделать так|рассказываем о|коротко о главном|newsletter|digest|weekly/i },
+  //    Формы «заказы дня» и «might interest you» добавлены после живого
+  //    прогона 12.09.2026: письмо FL.ru «Ваши заказы дня» до этого
+  //    проходило как движение по заказу и уезжало в Telegram.
+  { kind: 'digest', notify: false, re: /нов[а-яё]* проект[а-яё]* на бирже|подходящ[а-яё]* проект|дайджест|подборк|рассылк|новост[а-яё]*|вакансии дня|заказы дня|заказ[а-яё]* для вас|как сделать так|рассказываем о|коротко о главном|newsletter|digest|weekly|might interest you|matching your skills|new activity in|posted in/i },
 
   // 3. Личное сообщение — то, ради чего всё это и делается.
-  { kind: 'message', notify: true, re: /нов[а-яё]* сообщени|получено сообщени|вам написал|ответил[а-яё]* вам|сообщени[а-яё]* от|переписк|new message|replied to you/i },
+  //    «Re:» в теме — ответ в переписке; площадки так дайджесты не подписывают.
+  { kind: 'message', notify: true, re: /^\s*re:|нов[а-яё]* сообщени|получено сообщени|вам написал|ответил[а-яё]* вам|сообщени[а-яё]* от|переписк|new message|replied to you/i },
 
   // 4. Движение по заказу: отклик, приглашение, выбор исполнителя, оплата.
   { kind: 'order', notify: true, re: /отклик|ваш[а-яё]* заказ|нов[а-яё]* заказ|заказ №|предложени[а-яё]* по|приглашени|вас пригласили|выбрал[а-яё]* исполнител|исполнитель выбран|оплачен|заявк[а-яё]* на|принял[а-яё]* заказ|new (bid|proposal|offer|invitation)|you (were|have been) (invited|hired)/i },
@@ -57,12 +61,21 @@ const RULES = [
 // Отдаёт {kind, notify}. notify — единственное, что решает, поедет ли письмо
 // в Telegram. Всё, что не опознано, молчит: лучше пропустить письмо, чем
 // приучить себя не читать уведомления.
+const MESSAGE_SENDER = /^(messages?|inbox|chat|dialog)@/i;
+
 export function classifyMail({ subject = '', from = '' } = {}) {
   const s = `${subject}`;
+  const platform = detectPlatform(from);
   for (const rule of RULES) {
-    if (rule.re.test(s)) return { kind: rule.kind, notify: rule.notify, platform: detectPlatform(from) };
+    if (rule.re.test(s)) return { kind: rule.kind, notify: rule.notify, platform };
   }
-  return { kind: 'other', notify: false, platform: detectPlatform(from) };
+  // Тема ничего не сказала — смотрим на адрес отправителя. Freelancer.com
+  // шлёт личные сообщения с messages@notifications.freelancer.com, а в теме
+  // у него только «Re: Имя». Секреты и дайджесты сюда уже не доходят:
+  // они отсеяны правилами выше.
+  const address = String(from).match(/<([^>]+)>/)?.[1] || String(from);
+  if (MESSAGE_SENDER.test(address.trim())) return { kind: 'message', notify: true, platform };
+  return { kind: 'other', notify: false, platform };
 }
 
 // Ссылки, по которым в письме нечего смотреть.
