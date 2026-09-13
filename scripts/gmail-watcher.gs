@@ -14,8 +14,9 @@
  * УСТАНОВКА — см. README, раздел «Уведомления о сообщениях с площадок».
  * Коротко: script.google.com → новый проект → вставить этот файл →
  * задать WORKER_URL и INBOX_SECRET в «Свойствах скрипта» →
- * запустить collectOnce вручную (Google попросит разрешение) →
- * запустить installTrigger, чтобы повесить расписание.
+ * запустить collectOnce вручную (Google попросит разрешение).
+ * Расписание на каждые 5 минут collectOnce ставит себе сам при первом
+ * запуске — отдельно ничего запускать не нужно.
  */
 
 // Метка, которой помечаются обработанные письма. Пока метки нет,
@@ -41,6 +42,8 @@ var SENDERS = [
 var BATCH = 25;
 
 function collectOnce() {
+  ensureTrigger();
+
   var props = PropertiesService.getScriptProperties();
   var workerUrl = props.getProperty('WORKER_URL');
   var secret = props.getProperty('INBOX_SECRET');
@@ -102,11 +105,24 @@ function collectOnce() {
   Logger.log('отдано писем: ' + messages.length + ', обработано: ' + handled.length);
 }
 
-/** Разовая настройка: ставит триггер на каждые 5 минут. Запустить один раз. */
-function installTrigger() {
+/**
+ * Ставит расписание, если его ещё нет. Вызывается из collectOnce, поэтому
+ * достаточно один раз запустить collectOnce руками — дальше скрипт живёт сам.
+ * Повторные вызовы ничего не делают: триггер уже есть.
+ */
+function ensureTrigger() {
+  var exists = ScriptApp.getProjectTriggers().some(function (t) {
+    return t.getHandlerFunction() === 'collectOnce';
+  });
+  if (exists) return;
+  ScriptApp.newTrigger('collectOnce').timeBased().everyMinutes(5).create();
+  Logger.log('расписание поставлено: collectOnce каждые 5 минут');
+}
+
+/** Снять расписание, если понадобится остановить сборщик. */
+function removeTrigger() {
   ScriptApp.getProjectTriggers().forEach(function (t) {
     if (t.getHandlerFunction() === 'collectOnce') ScriptApp.deleteTrigger(t);
   });
-  ScriptApp.newTrigger('collectOnce').timeBased().everyMinutes(5).create();
-  Logger.log('триггер поставлен: каждые 5 минут');
+  Logger.log('расписание снято');
 }
