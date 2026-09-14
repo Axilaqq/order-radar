@@ -35,3 +35,19 @@ export function toIso(value) {
   const d = new Date(value);
   return Number.isNaN(d.getTime()) ? null : d.toISOString();
 }
+
+// Ответ площадки может прийти не в UTF-8: 1Clancer отдаёт RSS
+// как windows-1251. res.text() в Node и в Workers декодирует как UTF-8
+// и вместо «Задания» получается кракозябра. Поэтому charset берём
+// из Content-Type и декодируем явно.
+export function decodeBody(buffer, contentType = '') {
+  const bytes = buffer instanceof ArrayBuffer ? new Uint8Array(buffer) : buffer;
+  const m = String(contentType).match(/charset=([^\s;]+)/i);
+  const charset = (m ? m[1] : 'utf-8').replace(/['"]/g, '').trim().toLowerCase();
+  const label = charset === 'utf8' || charset === 'us-ascii' ? 'utf-8' : charset;
+  try {
+    return new TextDecoder(label).decode(bytes);
+  } catch {
+    return new TextDecoder('utf-8').decode(bytes);
+  }
+}

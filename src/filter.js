@@ -1,4 +1,4 @@
-import { KEYWORDS, STOP_WORDS, MIN_SCORE, SKIP_UKRAINIAN } from '../config/keywords.js';
+import { KEYWORDS, STOP_WORDS, MIN_SCORE, SKIP_UKRAINIAN, isAiNoise } from '../config/keywords.js';
 import { looksUkrainian } from './language.js';
 
 // Считает балл заказа и объясняет, почему он прошёл или не прошёл.
@@ -40,11 +40,16 @@ export function score(order, source = {}) {
   // объявлений поток на порядок больше и шума в нём соответственно тоже.
   const threshold = Number.isFinite(source.minScore) ? source.minScore : MIN_SCORE;
 
+  const passed = total >= threshold;
+  if (passed && isAiNoise(tags, haystack)) {
+    return { score: total, tags, passed: false, reason: 'ai-noise' };
+  }
+
   return {
     score: total,
     tags,
-    passed: total >= threshold,
-    reason: total >= threshold ? 'match' : 'low-score',
+    passed,
+    reason: passed ? 'match' : 'low-score',
   };
 }
 

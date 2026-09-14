@@ -8,10 +8,12 @@ import { parseJobicy } from './sources/jobicy.js';
 import { parseArbeitnow } from './sources/arbeitnow.js';
 import { parseWorkspace } from './sources/workspace.js';
 import { parseWeblancer } from './sources/weblancer.js';
+import { parseOneclancer } from './sources/oneclancer.js';
 import { score } from './filter.js';
 import { db } from './db.js';
 import { notify } from './telegram.js';
 import { translateAll } from './translate.js';
+import { decodeBody } from './util.js';
 
 const UA = 'order-radar/1.0';
 // Источники, отвечающие JSON. Остальные разбираются как текст (RSS, HTML).
@@ -36,7 +38,9 @@ async function fetchOnce(source, timeoutMs) {
       },
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return JSON_SOURCES.has(source.kind) ? await res.json() : await res.text();
+    // charset из заголовка: 1Clancer отдаёт windows-1251, res.text() его ломает.
+    const text = decodeBody(await res.arrayBuffer(), res.headers.get('content-type'));
+    return JSON_SOURCES.has(source.kind) ? JSON.parse(text) : text;
   } finally {
     clearTimeout(timer);
   }
@@ -65,6 +69,7 @@ function parse(payload, source) {
   if (source.kind === 'arbeitnow') return parseArbeitnow(payload, source);
   if (source.kind === 'workspace') return parseWorkspace(payload, source);
   if (source.kind === 'weblancer') return parseWeblancer(payload, source);
+  if (source.kind === 'oneclancer') return parseOneclancer(payload, source);
   if (source.kind === 'telegram') return parseTelegram(payload, source);
   return parseRss(payload, source);
 }

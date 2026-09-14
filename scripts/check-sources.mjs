@@ -11,7 +11,9 @@ import { parseJobicy } from '../src/sources/jobicy.js';
 import { parseArbeitnow } from '../src/sources/arbeitnow.js';
 import { parseWorkspace } from '../src/sources/workspace.js';
 import { parseWeblancer } from '../src/sources/weblancer.js';
+import { parseOneclancer } from '../src/sources/oneclancer.js';
 import { score } from '../src/filter.js';
+import { decodeBody } from '../src/util.js';
 
 const only = process.argv[2];
 const list = SOURCES.filter((s) => (only ? s.id === only : s.enabled));
@@ -23,14 +25,15 @@ for (const source of list) {
     process.stdout.write(`HTTP ${res.status} ${res.headers.get('content-type') || ''}\n`);
     if (!res.ok) continue;
 
+    const text = decodeBody(await res.arrayBuffer(), res.headers.get('content-type'));
     // Один разбор на вид источника — чтобы не городить лесенку из тернарников.
     const JSON_KINDS = { freelancehunt: parseFreelancehunt, infostart: parseInfostart,
                          remoteok: parseRemoteOk, jobicy: parseJobicy, arbeitnow: parseArbeitnow };
     const TEXT_KINDS = { workspace: parseWorkspace, weblancer: parseWeblancer,
-                         telegram: parseTelegram };
+                         telegram: parseTelegram, oneclancer: parseOneclancer };
     const items = JSON_KINDS[source.kind]
-      ? JSON_KINDS[source.kind](await res.json(), source)
-      : (TEXT_KINDS[source.kind] || parseRss)(await res.text(), source);
+      ? JSON_KINDS[source.kind](JSON.parse(text), source)
+      : (TEXT_KINDS[source.kind] || parseRss)(text, source);
 
     const scored = items.map((i) => ({ ...i, ...score(i, source) }));
     const passed = scored.filter((i) => i.passed);

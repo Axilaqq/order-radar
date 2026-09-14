@@ -1,6 +1,6 @@
 // Список площадок, которые опрашивает бот.
-// kind — адаптер: 'workspace' | 'weblancer' | 'infostart' | 'remoteok' | 'jobicy' |
-//        'arbeitnow' | 'freelancehunt' | 'rss' | 'telegram'.
+// kind — адаптер: 'workspace' | 'weblancer' | 'infostart' | 'oneclancer' |
+//        'remoteok' | 'jobicy' | 'arbeitnow' | 'freelancehunt' | 'rss' | 'telegram'.
 // region — для кого площадка: 'ru' | 'west'. Влияет только на читаемость конфига.
 // enabled — включён ли источник.
 // ignoreRules — id правил из config/keywords.js, которые здесь ничего не различают.
@@ -60,6 +60,20 @@ export const SOURCES = [
       'Accept-Language': 'ru-RU,ru;q=0.9',
     },
     status: 'ПРОВЕРЕНО: REST без токена, работает несколько суток подряд. ~1 заказ/сутки, медиана 10 000 ₽, откликов 6, комиссии нет, расчёты напрямую. Профильность 62%.',
+  },
+  {
+    id: 'oneclancer',
+    kind: 'oneclancer',
+    region: 'ru',
+    url: 'https://1clancer.ru/i/pics/rss/main.xml',
+    label: '1Clancer, задания 1С',
+    enabled: true,
+    ignoreRules: ['1c'],
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+      'Accept-Language': 'ru-RU,ru;q=0.9',
+    },
+    status: 'ПРОВЕРЕНО 14.09.2026: биржа разовых заданий по 1С, лента «Задания» advertised на /rss/. HTML списка зависает — Realplexor держит соединение, обычный fetch с таймаутом падает. RSS отдаёт XML charset=windows-1251, 2 свежих задания за сутки. Ссылки в ленте ведут на /offer/taskId=N, адаптер подменяет на /task/N. robots.txt закрывает /i/ (статика); страницу /rss/ не закрывает. Как на Инфостарте, правило «1С» выключено — иначе проходит всё подряд.',
   },
 
   // ───────────── Выключено: это ВАКАНСИИ, а не разовые заказы ─────────────
@@ -136,7 +150,7 @@ export const SOURCES = [
     url: 'https://www.fl.ru/rss/all.xml',
     label: 'FL.ru',
     enabled: false,
-    status: 'ПРОВЕРЕНО, ВЫКЛЮЧЕН: воркеру лента отвечает HTTP 403 — площадка отбивает запросы не из браузера.',
+    status: 'ВЫКЛЮЧЕН. 14.09.2026 с браузерным User-Agent лента ответила 200 и отдала RSS. robots.txt для Yandex и Googlebot закрывает */rss/*. Ранее воркеру с UA order-radar/1.0 площадка отвечала 403. Официальная подписка для людей есть, для робота — нет; оставляем выключенным. Письма FL.ru ловит второй канал.',
   },
   {
     id: 'tg_freelancce',
@@ -145,7 +159,7 @@ export const SOURCES = [
     url: 'https://t.me/s/freelancce',
     label: 'TG @freelancce',
     enabled: false,
-    status: 'НЕ ПРОВЕРЕНО ПО СВЕЖЕСТИ: последние посты, которые мы видели, — 02.07.2026. Механика t.me/s/ рабочая, нужен живой профильный канал.',
+    status: 'ВЫКЛЮЧЕН: посты устарели (последние, что видели, — 02.07.2026). 14.09.2026 искали профильный 1С-канал: @freelancer_1C — это группа на 18k, превью t.me/s/ для групп не работает; @Zadachi1c — не публичный канал. Механика t.me/s/ по-прежнему только для открытых каналов.',
   },
 ];
 

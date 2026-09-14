@@ -10,7 +10,7 @@ export const KEYWORDS = [
   { id: 'tgbot', re: /телеграм[\s-]?бот|telegram[\s-]?bot|тг[\s-]?бот|бот для telegram|бота? в телеграм/i, w: 4, tag: 'TG-бот' },
   { id: 'chatbot', re: /чат[\s-]?бот|голосов\w+ бот|бот для сайта/i, w: 4, tag: 'чат-бот' },
   { id: 'parsing', re: /парсер|парсинг|scraping|scraper|краулер|crawler/i, w: 4, tag: 'парсинг' },
-  { id: 'automation', re: /автоматизаци|automation|интеграци|integration|\bapi\b|вебхук|webhook|синхронизаци|обмен данными/i, w: 3, tag: 'автоматизация' },
+  { id: 'automation', re: /автоматизаци|automation|интеграци|integration|\bapi\b|вебхук|webhook|синхронизаци|обмен данными|http[\s-]?сервис/i, w: 3, tag: 'автоматизация' },
   // «ии» проверяется через границы из не-букв: \b в JS работает по латинице
   // и на кириллице соврал бы, поймав «ии» внутри слова.
   { id: 'ai', re: /\bai\b|\bgpt\b|\bllm\b|нейросет|искусственн\w+ интеллект|(^|[^а-яёa-z])ии([^а-яёa-z]|$)|chatgpt|openai|claude|n8n|make\.com/i, w: 3, tag: 'AI' },
@@ -40,7 +40,24 @@ export const STOP_WORDS = [
   /отзыв(ы|ов) за (деньги|отзыв)|написать отзыв на wildberries/i,
   /\bmlm\b|сетевой маркетинг|финансовая пирамида/i,
   /знакомств|эскорт|18\+/i,
+  // Генерация картинок и видео. Правило AI в одиночку набирает порог 3
+  // и пропускало такие заказы (замер 31.08.2026, Freelancehunt).
+  /midjourney|stable[\s-]?diffusion|\bsdxl\b|text[\s-]?to[\s-]?(image|video)|ai[\s-]?art/i,
 ];
+
+// Если из профиля сработал только тег AI, а текст про картинки, видео
+// или логотипы — это не наш заказ. «Внедрение ИИ в автозаказ» сюда
+// не попадает: там нет этих слов.
+export const AI_NOISE = /фотореалист|иллюстрац|логотип|айдентик|персонаж|векторизаци|обложк|аватар|motion[\s-]?design|\blora\b|ai[\s-]?(image|video|avatar|character)|нейросет\w* для (картин|изображен|фото|видео|рисун)|генераци\w+ (изображен|картин|фото|видео|персонаж)/i;
+
+// Теги, которые сами по себе не отличают наш профиль от «любого AI».
+const WEAK_AI_TAGS = new Set(['AI', 'язык', 'наш стек', 'контракт', 'contract']);
+
+export function isAiNoise(tags, haystack) {
+  if (!tags.includes('AI')) return false;
+  if (tags.some((t) => !WEAK_AI_TAGS.has(t))) return false;
+  return AI_NOISE.test(haystack);
+}
 
 // Отбрасывать объявления на украинском языке. Как это определяется — в src/language.js.
 // Замер 01.09.2026 по Freelancehunt: 49 украинских объявлений из 81.

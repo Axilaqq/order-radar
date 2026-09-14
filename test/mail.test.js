@@ -111,6 +111,7 @@ test('Почта: площадка определяется по отправи�
   assert.equal(detectPlatform('news@kwork.ru').label, 'Kwork');
   assert.equal(detectPlatform('no_reply@free-lance.ru').label, 'FL.ru');
   assert.equal(detectPlatform('noreply@career.habr.com').label, 'Хабр Карьера');
+  assert.equal(detectPlatform('notify@1clancer.ru').label, '1Clancer');
   assert.equal(detectPlatform('robot@nekayaploshadka.com').id, 'other');
 });
 

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="windows-1251"?>
+<rss version="2.0">
+  <channel>
+    <title>Задания - 1СЛансер</title>
+    <link>https://1clancer.ru</link>
+    <description>Задания</description>
+    <item>
+      <title>Подключить ОФД</title>
+      <link>https://1clancer.ru/offer/taskId=79384</link>
+      <guid>https://1clancer.ru/offer/taskId=79384</guid>
+      <description>у действующей кассы с действующем ОФД , вдруг отваливается ОФД. мастер починил, сказал, что порт слетел, скорее всего 1с что-то изменило в настройке кассы.</description>
+      <pubDate>Mon, 14 Sep 2026 08:19:47 +0300</pubDate>
+    </item>
+    <item>
+      <title>Обработка по планированию производства в УПП. Перенос части функционала в КА</title>
+      <link>https://1clancer.ru/offer/taskId=79385</link>
+      <guid>https://1clancer.ru/offer/taskId=79385</guid>
+      <description>Собрать данные из разных источников и отдавать их через HTTP сервис под 1С КА.</description>
+      <pubDate>Mon, 14 Sep 2026 11:20:47 +0300</pubDate>
+    </item>
+  </channel>
+</rss>
