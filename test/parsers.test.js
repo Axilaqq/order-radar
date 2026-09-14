@@ -9,8 +9,10 @@ import { parseRemoteOk } from '../src/sources/remoteok.js';
 import { parseJobicy } from '../src/sources/jobicy.js';
 import { parseArbeitnow } from '../src/sources/arbeitnow.js';
 import { parseWorkspace, parseRuDate } from '../src/sources/workspace.js';
+import { parseOneclancer } from '../src/sources/oneclancer.js';
 import { score } from '../src/filter.js';
 import { looksUkrainian } from '../src/language.js';
+import { decodeBody } from '../src/util.js';
 
 const read = (f) => readFileSync(new URL(`./fixtures/${f}`, import.meta.url), 'utf8');
 
@@ -208,4 +210,51 @@ test('Фильтр: чат-боты и ИИ на русском теперь р�
   assert.ok(score({ title: 'Внедрение ИИ решений в области автозаказа' }).tags.includes('AI'));
   // «ии» внутри слова не должно срабатывать
   assert.ok(!score({ title: 'Реставрация интерьера в помещении' }).tags.includes('AI'));
+});
+
+test('Фильтр: AI-дизайн и генерация картинок не проходят', () => {
+  // Замер 31.08.2026: правило AI в одиночку набирало порог на таких заказах.
+  const art = score({ title: 'Фотореалистичные фото персонажа (Flux/SDXL)', description: 'AI character' });
+  assert.equal(art.passed, false);
+  assert.ok(art.reason === 'stop-word' || art.reason === 'ai-noise', art.reason);
+
+  const logo = score({ title: 'AI логотип и айдентика бренда', description: '' });
+  assert.equal(logo.passed, false);
+  assert.equal(logo.reason, 'ai-noise');
+
+  // Профильное внедрение ИИ по-прежнему проходит.
+  const useful = score({ title: 'Внедрение ИИ решений в области автозаказа', description: '' });
+  assert.equal(useful.passed, true);
+  assert.ok(useful.tags.includes('AI'));
+});
+
+test('1Clancer: разбирает RSS заданий и подменяет ссылку на страницу задачи', () => {
+  const src = { id: 'oneclancer', ignoreRules: ['1c'] };
+  const items = parseOneclancer(read('oneclancer.xml'), src);
+  assert.equal(items.length, 2);
+  assert.equal(items[0].external_id, '79384');
+  assert.equal(items[0].url, 'https://1clancer.ru/task/79384');
+  assert.equal(items[1].external_id, '79385');
+  assert.equal(items[1].title, 'Обработка по планированию производства в УПП. Перенос части функционала в КА');
+  assert.equal(items[1].published_at, '2026-09-14T08:20:47.000Z');
+});
+
+test('1Clancer: правило «1С» выключено, проходит HTTP-сервис, ОФД — нет', () => {
+  const src = { id: 'oneclancer', ignoreRules: ['1c'] };
+  const [ofd, http] = parseOneclancer(read('oneclancer.xml'), src).map((o) => score(o, src));
+  assert.equal(ofd.passed, false, 'подключить кассу ОФД — не наш профиль');
+  assert.equal(http.passed, true, 'HTTP-сервис сбора данных должен проходить');
+  assert.ok(http.tags.includes('автоматизация'));
+});
+
+test('1Clancer: сломанная лента даёт пустой список, а не падение', () => {
+  assert.deepEqual(parseOneclancer('<rss></rss>', { id: 'oneclancer' }), []);
+  assert.deepEqual(parseOneclancer('', { id: 'oneclancer' }), []);
+});
+
+test('Кодировка: windows-1251 декодируется в кириллицу, а не в кракозябры', () => {
+  // «Задания» в cp1251: C7 E0 E4 E0 ED E8 FF
+  const buf = Uint8Array.from([0xC7, 0xE0, 0xE4, 0xE0, 0xED, 0xE8, 0xFF]);
+  assert.equal(decodeBody(buf, 'text/xml; charset=windows-1251'), 'Задания');
+  assert.equal(decodeBody(new TextEncoder().encode('ok'), 'application/json; charset=utf-8'), 'ok');
 });

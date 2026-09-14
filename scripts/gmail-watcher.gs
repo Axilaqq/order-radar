@@ -32,6 +32,7 @@ var SENDERS = [
   'weblancer.net',
   'workspace.ru',
   'infostart.ru',
+  '1clancer.ru',
   'freelance.ru',
   'career.habr.com',
   'upwork.com',

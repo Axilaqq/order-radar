@@ -19,6 +19,7 @@ const PLATFORMS = [
   { id: 'weblancer', re: /weblancer\.net/i, label: 'Weblancer' },
   { id: 'workspace', re: /workspace\.ru/i, label: 'Workspace' },
   { id: 'infostart', re: /infostart\.ru/i, label: 'Инфостарт' },
+  { id: 'oneclancer', re: /1clancer\.ru/i, label: '1Clancer' },
   { id: 'habr_career', re: /career\.habr\.com/i, label: 'Хабр Карьера' },
   { id: 'freelance_ru', re: /freelance\.ru/i, label: 'freelance.ru' },
   { id: 'upwork', re: /upwork\.com/i, label: 'Upwork' },
